@@ -18,7 +18,7 @@ func SwitchRelMode() {
 }
 func ConfigRouter(router *gin.Engine) {
 
-	if os.Getenv("CASCADE_RELEASE") == "production" {
+	if os.Getenv("RELEASE_MODE") == "production" {
 		// turn on proxy support
 		// TODO: allow users to specify trusted proxies
 		// TODO: what if proxy behind proxy
