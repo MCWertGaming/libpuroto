@@ -1,27 +1,41 @@
 package logHelper
 
 import (
-	"fmt"
 	"log"
-	"time"
+	"os"
+	"runtime"
 )
 
-// TODO: make pretty [name] [FATAL] 12.01.2022 MESSAGE
-func ErrorFatal(err error) {
-	if err != nil {
-		log.Fatal(err)
+func redBoldColor(message string) string {
+	if _, exists := os.LookupEnv("DISABLE_COLOR"); exists {
+		return message
+	} else {
+		return "\033[31m\033[1m" + message + "\033[m"
 	}
 }
-
-// TODO: make pretty
+func boldColor(message string) string {
+	if _, exists := os.LookupEnv("DISABLE_COLOR"); exists {
+		return message
+	} else {
+		return "\033[1m" + message + "\033[m"
+	}
+}
+func ErrorFatal(name string, err error) {
+	if err != nil {
+		_, filename, line, _ := runtime.Caller(1)
+		log.Fatalf("[%v] [%v] [%v:%v] %v", name, redBoldColor("FATAL"), filename, line, redBoldColor(err.Error()))
+	}
+}
 func ErrorPanic(err error) {
 	if err != nil {
 		panic(err)
 	}
 }
 func LogEvent(name string, message string) {
-	fmt.Println("[" + name + "] " + time.Now().Format("2006/01/02-15:04:05: ") + message)
+	_, filename, line, _ := runtime.Caller(1)
+	log.Printf("[%v] [%v] [%v:%v] %v", name, boldColor("LOG"), filename, line, boldColor(message))
 }
 func LogError(name string, err error) {
-	fmt.Println("[" + name + "] [ERROR] " + time.Now().Format("2006/01/02-15:04:05: ") + err.Error())
+	_, filename, line, _ := runtime.Caller(1)
+	log.Printf("[%v] [%v] [%v:%v] %v", name, redBoldColor("ERROR"), filename, line, redBoldColor(err.Error()))
 }
