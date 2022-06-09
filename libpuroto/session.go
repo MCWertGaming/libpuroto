@@ -19,6 +19,7 @@ package libpuroto
 
 import (
 	"crypto/subtle"
+	"time"
 
 	"github.com/go-redis/redis"
 )
@@ -31,14 +32,18 @@ func SessionValid(uid, token *string, redisClient *redis.Client) (bool, error) {
 	// the UUID session extension is part of the session, so no work is needed
 	res, err = redisClient.Get(*uid).Result()
 
-	if err != nil {
-		return false, err
-		// } else if res != *token {
-	} else if subtle.ConstantTimeCompare([]byte(res), []byte(*token)) != 1 {
-		// TODO: Use secure matching function
-		// session and token don't match
+	if err == redis.Nil {
+		// the uid has no session stored in redis, it's not valid therefore
 		return false, nil
+	} else if err != nil {
+		return false, err
+	} else if subtle.ConstantTimeCompare([]byte(res), []byte(*token)) == 1 {
+		// session and token match, the session is valid
+		// We'll increase the TTL to keep the session alive
+		redisClient.Expire(*uid, time.Hour*24*7)
+
+		return true, nil
 	}
-	// the session seems valid
-	return true, nil
+	// the session seems to not being valid
+	return false, nil
 }
